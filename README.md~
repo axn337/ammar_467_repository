@@ -1,0 +1,4 @@
+# ammar_467_repository
+This repository is for the course EECS 476 exercise
+
+I edited my_stdr_open_loop_commander.cpp according to the first assignment. I also edited the CMake  and the package.xml files in order to recogonize the newly named nodes, publishers, and supscribers. 

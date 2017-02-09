@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "commander"); 
     ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
     ros::Publisher twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1);
-    ros::Subscriber alarm_subscriber = n.subscribe("lidar_alarm",1,alarmCallback); 
+    ros::Subscriber alarm_subscriber = n.subscribe("my_lidar_alarm",1,alarmCallback); 
     //some "magic numbers"
     double sample_dt = 0.01; //specify a sample period of 10ms  
     double speed = 0.5; // 1m/s speed command
