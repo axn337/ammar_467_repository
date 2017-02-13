@@ -1,5 +1,5 @@
 //path_client:
-// illustrates how to send a request to the path_service service
+// a code to send the desired poses to bath serves
 
 #include <ros/ros.h>
 #include <ammar_ros_service/PathSrv.h> // this message type is defined in the current package
@@ -32,12 +32,13 @@ int main(int argc, char **argv) {
     ROS_INFO("connected client to service");
     ammar_ros_service::PathSrv path_srv;
     
-    //create some path points...this should be done by some intelligent algorithm, but we'll hard-code it here
+    //First pose
+
     geometry_msgs::PoseStamped pose_stamped;
     geometry_msgs::Pose pose;
-    pose.position.x = 3.0; // say desired x-coord is 1
+    pose.position.x = 3.0; //  desired x-coord is 3
     pose.position.y = 0.0;
-    pose.position.z = 0.0; // let's hope so!
+    pose.position.z = 0.0; 
     pose.orientation.x = 0.0; //always, for motion in horizontal plane
     pose.orientation.y = 0.0; // ditto
     pose.orientation.z = 0.0; // implies oriented at yaw=0, i.e. along x axis
@@ -45,47 +46,61 @@ int main(int argc, char **argv) {
     pose_stamped.pose = pose;
     path_srv.request.nav_path.poses.push_back(pose_stamped);
     
-    // some more poses...
+    // initial Pose
+
+
     quat = convertPlanarPhi2Quaternion(1.57); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    pose_stamped.pose.position.y=.5; // say desired y-coord is 1.0
-    //pose_stamped.pose.position.x=3.0; // say desired y-coord is 1.0
+    pose_stamped.pose.position.y=3.0; //  desired y-coord is 3
+    //pose_stamped.pose.position.x=3.0; // same x
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    // first Pose
     
     quat = convertPlanarPhi2Quaternion(0.00); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    //pose_stamped.pose.position.y=4.0; // say desired y-coord is 1.0
-    pose_stamped.pose.position.x=4.0; // say desired y-coord is 1.0
+    //pose_stamped.pose.position.y=3.0; // same y
+    pose_stamped.pose.position.x=7.0; //  desired x-coord is 7.0
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    // second Pose
 
     quat = convertPlanarPhi2Quaternion(1.57); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    pose_stamped.pose.position.y=.5; // say desired y-coord is 1.0
-    //pose_stamped.pose.position.x=2.5; // say desired y-coord is 1.0
+    pose_stamped.pose.position.y=5.0; //  desired y-coord is 5.0
+    //pose_stamped.pose.position.x=4.0; // same x
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    // third Pose
 
     quat = convertPlanarPhi2Quaternion(3.14); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    //pose_stamped.pose.position.y=6.5; // say desired y-coord is 1.0
-    pose_stamped.pose.position.x=6.5; // say desired y-coord is 1.0
+    //pose_stamped.pose.position.y=2.0; // same y
+    pose_stamped.pose.position.x=0.5; //  desired x-coord is 0.5
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    // fourth Pose
 
     quat = convertPlanarPhi2Quaternion(1.57); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    pose_stamped.pose.position.y=0.3; // say desired y-coord is 1.0
-    //pose_stamped.pose.position.x=2.0; // say desired y-coord is 1.0
+    pose_stamped.pose.position.y= 8.0; // desired y-coord is 8.0
+    //pose_stamped.pose.position.x=6.5; // same x
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    // fifth Pose
 
     quat = convertPlanarPhi2Quaternion(3.14); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    //pose_stamped.pose.position.y=1.0; // say desired y-coord is 1.0
-    pose_stamped.pose.position.x=1.0; // say desired y-coord is 1.0
+    //pose_stamped.pose.position.y=3.0; // same y
+    pose_stamped.pose.position.x=  0.0; // desired x-coord is 0.0
     path_srv.request.nav_path.poses.push_back(pose_stamped);
+
+    // final Pose
 
     quat = convertPlanarPhi2Quaternion(1.57); // get a quaternion corresponding to this heading
     pose_stamped.pose.orientation = quat;
-    pose_stamped.pose.position.y=3.0; // say desired y-coord is 1.0
-    //pose_stamped.pose.position.x=4.5; // say desired y-coord is 1.0
+    pose_stamped.pose.position.y=  12.0; // say desired y-coord is 12.0
+    //pose_stamped.pose.position.x=1.0; // same x
     path_srv.request.nav_path.poses.push_back(pose_stamped);
 
     client.call(path_srv);

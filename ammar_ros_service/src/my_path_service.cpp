@@ -1,6 +1,6 @@
-//path_service:
+//my_path_service:
 // example showing how to receive a nav_msgs/Path request
-// run with complementary path_client
+// run with complementary my_path_client
 // responds immediately to ack new path...but execution takes longer
 
 // this is a crude service; just assumes robot initial pose is 0,
@@ -18,8 +18,8 @@
 using namespace std;
 //some tunable constants, global
 const double g_move_speed = 1.0; // set forward speed to this value, e.g. 1m/s
-const double g_spin_speed = 1.0; // set yaw rate to this value, e.g. 1 rad/s
-const double g_sample_dt = 0.01;
+const double g_spin_speed = 0.5; // set yaw rate to this value, e.g. 1 rad/s
+const double g_sample_dt = 0.01; //
 const double g_dist_tol = 0.01; // 1cm
 //global variables, including a publisher object
 geometry_msgs::Twist g_twist_cmd;
@@ -120,6 +120,7 @@ void get_yaw_and_dist(geometry_msgs::Pose current_pose, geometry_msgs::Pose goal
 
  if (dist < g_dist_tol) { //too small of a motion, so just set the heading from goal heading
    heading = convertPlanarQuat2Phi(goal_pose.orientation); 
+   // the distance is the hypotenuse length between current location to desired location
    dist = sqrt(pow(goal_pose.position.x - current_pose.position.x,2)+pow(goal_pose.position.y - current_pose.position.y,2)+pow(goal_pose.position.z - current_pose.position.z,2)) ;
 
  }
@@ -150,13 +151,7 @@ bool callback(ammar_ros_service::PathSrvRequest& request, ammar_ros_service::Pat
         ROS_INFO("current (x,y) = (%f, %f)",g_current_pose.position.x,g_current_pose.position.y);
         ROS_INFO("travel distance = %f",travel_distance);         
         
-        
-        // a quaternion is overkill for navigation in a plane; really only need a heading angle
-        // this yaw is measured CCW from x-axis
-        // GET RID OF NEXT LINE AFTER FIXING get_yaw_and_dist()
-        //yaw_desired = convertPlanarQuat2Phi(pose_desired.orientation); //from i'th desired pose
-        
-        //ROS_INFO("pose %d: desired yaw = %f",i,yaw_desired);        
+            
         yaw_current = convertPlanarQuat2Phi(g_current_pose.orientation); //our current yaw--should use a sensor
         spin_angle = yaw_desired - yaw_current; // spin this much
         spin_angle = min_spin(spin_angle);// but what if this angle is > pi?  then go the other way
@@ -166,7 +161,9 @@ bool callback(ammar_ros_service::PathSrvRequest& request, ammar_ros_service::Pat
         
         //FIX THE NEXT LINE, BASED ON get_yaw_and_dist()
 
-        do_move(travel_distance);  // move forward by this distance
+        do_move(travel_distance);  // move forward by distance retrieved from get_yaw_and_dist function
+	g_current_pose.position.x = pose_desired.position.x;  // update x-coordinate
+	g_current_pose.position.y = pose_desired.position.y;  // update y-coordinate
         }
 
   return true;
