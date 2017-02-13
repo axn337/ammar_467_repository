@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
       loop_timer.sleep();
     }
     twist_cmd.linear.x=speed; //command to move forward
-    while(timer<time_3_sec) {
+    while(timer<time_3_sec) { // move for 3 meters
           twist_commander.publish(twist_cmd);
           timer+=sample_dt;
           loop_timer.sleep();
