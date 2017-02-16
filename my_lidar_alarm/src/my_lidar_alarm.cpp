@@ -7,17 +7,15 @@
 
 
 
-int n; //for loop counter
-int theta_new= -1.5; // 
 
-int theta= -1.5;// a set of 30 anlgles, bounded between -1.5 and 1.5 radians
+double theta= -1.5;// a set of 30 anlgles, bounded between -1.5 and 1.5 radians
 
-int MIN_SAFE_DISTANCE; // to be determened according to theta
+double MIN_SAFE_DISTANCE= 0; // to be determened according to theta
 
 int ping_index; // NOT real; callback will have to find this
 
 // these values to be set within the laser callback
-int ping_dist=0; // global var to hold length of a SINGLE LIDAR ping--in front
+double ping_dist=0; // global var to hold length of a SINGLE LIDAR ping--in front
 
 double angle_min_=0.0;
 double angle_max_=0.0;
@@ -32,7 +30,9 @@ ros::Publisher lidar_dist_publisher_;
 // really, do NOT want to depend on a single ping.  Should consider a subset of pings
 // to improve reliability and avoid false alarms or failure to see an obstacle
 
-void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
+void laserCallback(const sensor_msgs::LaserScan& laser_scan) 
+
+{
     
     angle_min_ = laser_scan.angle_min;
     angle_max_ = laser_scan.angle_max;
@@ -41,20 +41,19 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
     range_max_ = laser_scan.range_max;
 
 
-    for (n=0 ; n<30 ; n++ ){ 
-
-	theta= theta_new; // theta[0] = -1.50 
-
+    for (theta=-1.5 ; theta <1.6 ; theta += 0.1){ 
+		
 	ping_index = (int) abs((theta-angle_min_)/angle_increment_);
 	
 	ping_dist = laser_scan.ranges[ping_index];
 
 
 	
-	if ((theta > 0.3) || (theta < -0.3) ){ 
+	if ((theta > 0.3) || (theta < -0.3)){ 
 	//between -1.5 and -.3, and between .3 and 1.5 we use the following equation
 	//to calculate the minimum safe distant:
-	MIN_SAFE_DISTANCE= 0.3 / abs(sin(theta));
+	MIN_SAFE_DISTANCE= abs(0.3 / sin(theta));
+	
 	}
 
 	else {
@@ -63,10 +62,10 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
 
 	}
 
-	ROS_INFO("For theta= %f Ping dist= %d and safe dist= %d ", theta, ping_dist, MIN_SAFE_DISTANCE);
+	ROS_INFO("For theta= %f Ping dist= %f and safe dist= %f ", theta, ping_dist, MIN_SAFE_DISTANCE);
 
 
-	if (ping_dist<MIN_SAFE_DISTANCE ) {
+	if ((ping_dist<MIN_SAFE_DISTANCE) ) {
 	ROS_WARN("DANGER, WILL ROBINSON!!");
 	laser_alarm_=true;
 	break;
@@ -74,10 +73,6 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan) {
 	else {
 	laser_alarm_=false;
 	}
-	
-	
-	theta_new = theta + 0.1; // we increment the following theta by 0.1 by this operation
-
 
 
 
@@ -95,7 +90,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "my_lidar_alarm"); //name this node
     ros::NodeHandle nh; 
     //create a Subscriber object and have it subscribe to the lidar topic
-    ros::Publisher pub = nh.advertise<std_msgs::Bool>("lidar_alarm", 1);
+    ros::Publisher pub = nh.advertise<std_msgs::Bool>("my_lidar_alarm", 1);
    	lidar_alarm_publisher_ = pub; // let's make this global, so callback can use it
     ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("lidar_dist", 1);  
     lidar_dist_publisher_ = pub2;
