@@ -1,0 +1,11 @@
+#goal definition
+
+nav_msgs/Path nav_path
+---
+#result definition
+nav_msgs/Path nav_path
+
+---
+#feedback
+#geometry_msgs/Pose pose
+nav_msgs/Path fdbk
