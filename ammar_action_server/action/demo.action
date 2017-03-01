@@ -3,9 +3,9 @@
 nav_msgs/Path nav_path
 ---
 #result definition
-nav_msgs/Path nav_path
-
+#nav_msgs/Path nav_path
+geometry_msgs/Pose pose
 ---
 #feedback
-#geometry_msgs/Pose pose
-nav_msgs/Path fdbk
+geometry_msgs/Pose fdbk
+#nav_msgs/Path fdbk

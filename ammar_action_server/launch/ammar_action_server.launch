@@ -1,0 +1,6 @@
+<launch>
+<node name="alarm" pkg="my_lidr_alarm" type="my_lidr_alarm"/>
+<node name="server" pkg="ammar_action_server" type="ammar_action_server"/>
+<node name="client" pkg="ammar_action_server" type="path_client_node"/>
+
+</launch>

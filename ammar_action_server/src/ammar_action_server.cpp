@@ -48,6 +48,8 @@ private:
     ammar_action_server::demoFeedback feedback_; // for feedback 
     //  use: as_.publishFeedback(feedback_); to send incremental feedback to the client
     int countdown_val_;
+    
+
 
 
 public:
@@ -61,23 +63,52 @@ public:
 	// here are a few useful utility functions:
 
 
-	//double sgn(double x);
-	//double min_spin(double spin_angle);
-	//double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
-	//geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
+	double sgn(double x);
+	double min_spin(double spin_angle);
+	double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
+	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
 
-	////void do_halt();
-	//void do_move(double distance);
-	//void do_spin(double spin_ang);
+	void do_halt();
+	void do_move(double distance);
+	void do_spin(double spin_ang);
+	void do_inits(ros::NodeHandle &n);
+	void get_yaw_and_dist(geometry_msgs::Pose current_pose, geometry_msgs::Pose goal_pose,double &dist, double &heading);
+	
 
 //signum function: strip off and return the sign of the argument
-double sgn(double x) { if (x>0.0) {return 1.0; }
+
+
+
+//int g_count = 0;
+//bool g_count_failure = false;
+
+    
+
+};
+
+AmmarActionServer::AmmarActionServer() :
+   as_(nh_, "path_action", boost::bind(&AmmarActionServer::executeCB, this, _1),false) 
+// in the above initialization, we name the server "example_action"
+//  clients will need to refer to this name to connect with this server
+{
+	ros::NodeHandle n;
+    ROS_INFO("in constructor of ammarActionServer...");
+    // do any other desired initializations here...specific to your implementation
+
+    as_.start(); //start the server running
+    
+    do_inits(n); //pass in a node handle so this function can set up publisher with it
+}
+
+
+double AmmarActionServer::sgn(double x) { 
+	if (x>0.0) {return 1.0; }
     else if (x<0.0) {return -1.0;}
     else {return 0.0;}
 }
 
 //a function to consider periodicity and find min delta angle
-double min_spin(double spin_angle) {
+double AmmarActionServer::min_spin(double spin_angle) {
         if (spin_angle>M_PI) {
             spin_angle -= 2.0*M_PI;}
         if (spin_angle< -M_PI) {
@@ -86,7 +117,7 @@ double min_spin(double spin_angle) {
 }            
 
 // a useful conversion function: from quaternion to yaw
-double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion) {
+double AmmarActionServer::convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion) {
     double quat_z = quaternion.z;
     double quat_w = quaternion.w;
     double phi = 2.0 * atan2(quat_z, quat_w); // cheap conversion from quaternion to heading for planar motion
@@ -94,7 +125,7 @@ double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion) {
 }
 
 //and the other direction:
-geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
+geometry_msgs::Quaternion AmmarActionServer::convertPlanarPhi2Quaternion(double phi) {
     geometry_msgs::Quaternion quaternion;
     quaternion.x = 0.0;
     quaternion.y = 0.0;
@@ -105,7 +136,7 @@ geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
 
 // a few action functions:
 //a function to reorient by a specified angle (in radians), then halt
-void do_spin(double spin_ang) {
+void AmmarActionServer::do_spin(double spin_ang) {
     ros::Rate loop_timer(1/g_sample_dt);
     double timer=0.0;
     double final_time = fabs(spin_ang)/g_spin_speed;
@@ -119,7 +150,7 @@ void do_spin(double spin_ang) {
 }
 
 //a function to move forward by a specified distance (in meters), then halt
-void do_move(double distance) { // always assumes robot is already oriented properly
+void AmmarActionServer::do_move(double distance) { // always assumes robot is already oriented properly
                                 // but allow for negative distance to mean move backwards
     ros::Rate loop_timer(1/g_sample_dt);
     double timer=0.0;
@@ -134,7 +165,7 @@ void do_move(double distance) { // always assumes robot is already oriented prop
     do_halt();
 }
 
-void do_halt() {
+void AmmarActionServer::do_halt() {
     ros::Rate loop_timer(1/g_sample_dt);   
     g_twist_cmd.angular.z= 0.0;
     g_twist_cmd.linear.x=0.0;
@@ -143,10 +174,32 @@ void do_halt() {
           loop_timer.sleep(); 
           }   
 }
+void AmmarActionServer::do_inits(ros::NodeHandle &n) {
+	//initialize components of the twist command global variable
+	g_twist_cmd.linear.x=0.0;
+	g_twist_cmd.linear.y=0.0;    
+	g_twist_cmd.linear.z=0.0;
+	g_twist_cmd.angular.x=0.0;
+	g_twist_cmd.angular.y=0.0;
+	g_twist_cmd.angular.z=0.0;  
+   
+	//define initial position to be 0
+	g_current_pose.position.x = 0.0;
+	g_current_pose.position.y = 0.0;
+		g_current_pose.position.z = 0.0;
+    
+		// define initial heading to be "0"
+	g_current_pose.orientation.x = 0.0;
+	g_current_pose.orientation.y = 0.0;
+	g_current_pose.orientation.z = 0.0;
+	g_current_pose.orientation.w = 1.0;
+    // we declared g_twist_commander as global, but never set it up; do that now that we have a node handle
+	g_twist_commander = n.advertise<geometry_msgs::Twist>("/robot0/cmd_vel", 1);    
+}
 
 //THIS FUNCTION IS NOT FILLED IN: NEED TO COMPUTE HEADING AND TRAVEL DISTANCE TO MOVE
 //FROM START TO GOAL
-void get_yaw_and_dist(geometry_msgs::Pose current_pose, geometry_msgs::Pose goal_pose,double &dist, double &heading) {
+void AmmarActionServer::get_yaw_and_dist(geometry_msgs::Pose current_pose, geometry_msgs::Pose goal_pose,double &dist, double &heading) {
  
 
     dist = 0.0; //FALSE!!    
@@ -164,30 +217,6 @@ void get_yaw_and_dist(geometry_msgs::Pose current_pose, geometry_msgs::Pose goal
 
 }
 
-
-
-//int g_count = 0;
-//bool g_count_failure = false;
-
-
-
-
-};
-
-AmmarActionServer::AmmarActionServer() :
-   as_(nh_, "timer_action", boost::bind(&AmmarActionServer::executeCB, this, _1),false) 
-// in the above initialization, we name the server "example_action"
-//  clients will need to refer to this name to connect with this server
-{
-    ROS_INFO("in constructor of ammarActionServer...");
-    // do any other desired initializations here...specific to your implementation
-
-    as_.start(); //start the server running
-}
-
-
-
-
 void AmmarActionServer::executeCB(const actionlib::SimpleActionServer<ammar_action_server::demoAction>::GoalConstPtr& goal) {
     ROS_INFO("in executeCB");
 
@@ -203,6 +232,8 @@ void AmmarActionServer::executeCB(const actionlib::SimpleActionServer<ammar_acti
    for (int i=0;i<npts;i++) { //visit each subgoal
         // odd notation: drill down, access vector element, drill some more to get pose
         pose_desired = goal->nav_path.poses[i].pose; //get next pose from vector of poses
+        
+
         
         //WRITE THIS FNC: compute desired heading and travel distance based on current and desired poses
         get_yaw_and_dist(g_current_pose, pose_desired,travel_distance, yaw_desired);
@@ -227,11 +258,14 @@ void AmmarActionServer::executeCB(const actionlib::SimpleActionServer<ammar_acti
 		
 		if (as_.isPreemptRequested()){	
           ROS_WARN("goal cancelled!");
-          result_.nav_path = g_current_pose;
-          as_.setAborted(result_); // tell the client we have given up on this goal; send the result message as well
           do_halt();
+          result_.pose = g_current_pose;
+          as_.setAborted(result_); // tell the client we have given up on this goal; send the result message as well
+          
           return; // done with callback
  		}
+		
+		
     }
     
       //return 0;
@@ -244,21 +278,23 @@ void AmmarActionServer::executeCB(const actionlib::SimpleActionServer<ammar_acti
       // timer.sleep(); //wait 1 sec between loop iterations of this timer
     
     //if we survive to here, then the goal was successfully accomplished; inform the client
-    result_.nav_path = g_current_pose; //value should be zero, if completed countdown
+    result_.pose = g_current_pose; //value should be zero, if completed countdown
     as_.setSucceeded(result_); // return the "result" message to client, along with "success" status
+
+
 
 }
 
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "ammar_action_server"); // name this node 
-	ros::NodeHandle n;
+	
 
     ROS_INFO("instantiating the ammar_action_server: ");
 
     AmmarActionServer as_object; // create an instance of the class "AmmarActionServer"
     
-    do_inits(n); //pass in a node handle so this function can set up publisher with it
+    
 
     
     ROS_INFO("Ready to accept paths");

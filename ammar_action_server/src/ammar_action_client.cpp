@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <nav_msgs/Path.h>
+#include <std_msgs/Bool.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 
@@ -25,8 +26,9 @@ geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
 }
 
 bool g_goal_active = false; //some global vars for communication with callbacks
-int g_result_output = -1;
-int g_fdbk = -1;
+geometry_msgs::Pose g_result_output ;
+geometry_msgs::Pose g_fdbk ;
+double i=0;
 
 
 
@@ -46,15 +48,15 @@ void alarmCallback(const std_msgs::Bool& alarm_msg)
 void doneCb(const actionlib::SimpleClientGoalState& state,
         const ammar_action_server::demoResultConstPtr& result) {
     ROS_INFO(" doneCb: server responded with state [%s]", state.toString().c_str());
-    ROS_INFO("got result output = %d",result.nav_path);
-    g_result_output= result.nav_path;
+    ROS_INFO("got result output position is (x,y) = ( %d, %d)",result->pose.position.x ,result->pose.position.y);
+    g_result_output= result->pose;
     g_goal_active=false;
 }
 
 //this function wakes up every time the action server has feedback updates for this client
 // only the client that sent the current goal will get feedback info from the action server
 void feedbackCb(const ammar_action_server::demoFeedbackConstPtr& fdbk_msg) {
-    ROS_INFO("feedback status = %d",fdbk_msg->fdbk);
+    ROS_INFO("Current x and y coordinates from feedback = %d , %d" ,fdbk_msg->fdbk.position.x ,fdbk_msg->fdbk.position.y);
     g_fdbk = fdbk_msg->fdbk; //make status available to "main()"
 
 }
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
         ros::init(argc, argv, "path_client_node"); // name this node 
         ros::NodeHandle n;
         
-        ros::Subscriber alarm_subscriber = n.subscribe("lidar_alarm",1,alarmCallback); 
+        ros::Subscriber alarm_subscriber = n.subscribe("my_lidar_alarm",1,alarmCallback); 
 
         //ros::Rate main_timer(1.0);
         // here is a "goal" object compatible with the server, as defined in ammar_action_server/action
@@ -93,50 +95,53 @@ int main(int argc, char** argv) {
         }
         ROS_INFO("connected to action server");  // if here, then we connected to the server;
         
-        while(ros::ok()) { // do forever
-        
-        //initial pose
-        
         geometry_msgs::PoseStamped pose_stamped;
 		geometry_msgs::Pose pose;
-		pose.position.x = 0.0; //  desired x-coord is 3
-		pose.position.y = 6.0;
-		pose.position.z = 0.0; 
-		pose.orientation.x = 0.0; //always, for motion in horizontal plane
-		pose.orientation.y = 0.7071; // ditto
-		pose.orientation.z = 0.0; // implies oriented at yaw=0, i.e. along x axis
-		pose.orientation.w = 0.7071; //sum of squares of all components of unit quaternion is 1
-		pose_stamped.pose = pose;
-		goal.nav_path.poses.push_back(pose_stamped);
-		
-
-
-        action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); 
+       			
+			
         
-        if(g_lidar_alarm) {
+        //initial pose
+			        
+			quat = convertPlanarPhi2Quaternion(1.57); // get a quaternion corresponding to this heading
+			pose_stamped.pose.orientation = quat;
+			pose_stamped.pose.position.y=6.0; //  desired y-coord is 3
+			pose_stamped.pose.position.x=0.0; // same x
+			goal.nav_path.poses.push_back(pose_stamped);
+
+
+			action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); 
+		
+		while(g_goal_active){
+		
+		if(g_lidar_alarm) {
 			ROS_INFO("cancelling goal");
 			action_client.cancelGoal(); //this is how one can cancel a goal in process
-          
-			geometry_msgs::PoseStamped pose_stamped;
-			geometry_msgs::Pose pose;
-			pose.position.x = 0.0; //  desired x-coord is 3
-			pose.position.y = 0.0;
-			pose.position.z = 0.0; 
-			pose.orientation.x = 0.0; //always, for motion in horizontal plane
-			pose.orientation.y = -0.7071; // ditto
-			pose.orientation.z = 0.0; // implies oriented at yaw=0, i.e. along x axis
-			pose.orientation.w = 0.7071; //sum of squares of all components of unit quaternion is 1
-			pose_stamped.pose = pose;
+          while(g_goal_active){
+			  ros::Duration(0.1).sleep();}
+			quat = convertPlanarPhi2Quaternion(-1.57); // get a quaternion corresponding to this heading
+			pose_stamped.pose.orientation = quat;
+			pose_stamped.pose.position.y=0.0; //  desired y-coord is 3
+			pose_stamped.pose.position.x=0.0; // same x
 			goal.nav_path.poses.push_back(pose_stamped);
-          
-          
-          }
-     } 
-        
-        
+			//pose_stamped.pose = pose;
+			action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); 
+			ROS_INFO("new goal sent");
+			//return;
+			while(!g_goal_active){
+			  ros::Duration(0.1).sleep();
+			  }
+			  break;
+		}
+		ros::spinOnce();
+		ros::Duration(0.1).sleep();
+		
+		}
+			  ros::spinOnce();
+			  ros::Duration(0.1).sleep();
+}
         
 
     
-      return 0;
-}
+      
+
 
