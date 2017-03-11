@@ -413,6 +413,7 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
 	double dy = 0.5; //stop in .5 meters
 
 	double psi_des = atan2(dy,dx);
+	nav_msgs::Odometry des_state;
 	des_state.pose.pose = start_pose.pose;//start from here
 	des_state.twist.twist = halt_twist_;//start from here
 	
@@ -421,15 +422,15 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
 	
 	double speed_des=speed_max_;
 
-	double t_ramp= speedmax_/accel_max_;
-	int npsts_ramp = round(t_ramp/dt_);
+	double t_ramp= speed_max_/accel_max_;
+	int npts_ramp = round(t_ramp/dt_);
 
 	//ramp down
 	for(int i=0; i<npts_ramp;i++){
 		speed_des -= accel_max_*dt_; //Euler one step integration
 		des_state.twist.twist.linear.x= speed_des;
-		x_des += speed_des * dt_ cos(psi_des); //Euler one step integration
-		y_des += speed_des * dt_ cos(psi_des); //Euler one step integration
+		x_des += speed_des * dt_ * cos(psi_des); //Euler one step integration
+		y_des += speed_des * dt_ * cos(psi_des); //Euler one step integration
 		des_state.pose.pose.position.x = x_des;
 		des_state.pose.pose.position.y = y_des;
 		vec_of_states.push_back(des_state);

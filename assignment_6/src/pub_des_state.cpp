@@ -1,12 +1,17 @@
 #include "pub_des_state.h"
 //ExampleRosClass::ExampleRosClass(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
-bool g_lidar_alarm=false;
-void alarmCallback(const std_msgs::Bool& alarm_msg){
-	g_lidar_alarm = alarm_msg.data; //make the alarm status global
 
-	if(g_lidar_alarm){ ROS_INFO("lidar alarm received!");}
-}
+bool g_lidar_alarm=false; // global var for lidar alarm
+
+void alarmCallback(const std_msgs::Bool& alarm_msg) 
+{ 
+  g_lidar_alarm = alarm_msg.data; //make the alarm status global, so main() can use it
+  if (g_lidar_alarm) {
+     ROS_INFO("LIDAR alarm received!"); 
+  }
+} 
+
 
 DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisher::executeCB, this, _1),false) {
@@ -69,17 +74,19 @@ void DesStatePublisher::initializePublishers() {
 }
 
 bool DesStatePublisher::estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+  
+    ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
+    ros::Subscriber alarm_subscriber = n.subscribe("my_lidar_alarm",1,alarmCallback); 
+    ros::Rate loop_timer(1 / dt); //timer for fixed publication rate
 
-    ros::NodeHandle n;
-    ros::Subscriber alarm_subscriber = n.subscribe("my_lidar_alarm", 1, true);
     
-    if(g_lidar_alarm){
-    ROS_WARN("estop!!");
-    e_stop_trigger_ = true;
-    return true;
-    }
-    ros::spinOnce();
-    loop_timer.sleep();
+	if(g_lidar_alarm){       
+		ROS_WARN("estop!!");
+		e_stop_trigger_ = true;
+		return true;
+	}
+	ros::spinOnce();
+	loop_timer.sleep();
 }
 
 bool DesStatePublisher::clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {

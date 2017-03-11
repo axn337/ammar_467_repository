@@ -8,9 +8,9 @@
 
 
 
-double theta= -1.5;// a set of 30 anlgles, bounded between -1.5 and 1.5 radians
+double theta= -0.3;// a set of 30 anlgles, bounded between -1.5 and 1.5 radians
 
-double MIN_SAFE_DISTANCE= 0; // to be determened according to theta
+double MIN_SAFE_DISTANCE= 0.01; // to be determened according to theta
 
 int ping_index; // NOT real; callback will have to find this
 
@@ -41,26 +41,13 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan)
     range_max_ = laser_scan.range_max;
 
 
-    for (theta=-1.5 ; theta <1.6 ; theta += 0.1){ 
+    for (theta=-0.3 ; theta <0.4 ; theta += 0.1){ 
 		
 	ping_index = (int) abs((theta-angle_min_)/angle_increment_);
 	
 	ping_dist = laser_scan.ranges[ping_index];
 
-
 	
-	if ((theta > 0.3) || (theta < -0.3)){ 
-	//between -1.5 and -.3, and between .3 and 1.5 we use the following equation
-	//to calculate the minimum safe distant:
-	MIN_SAFE_DISTANCE= abs(0.3 / sin(theta));
-	
-	}
-
-	else {
-	//we fix the minimum safe distance between -0.3 and 0.3 to 1.04
-	MIN_SAFE_DISTANCE= 1.04;
-
-	}
 
 	ROS_INFO("For theta= %f Ping dist= %f and safe dist= %f ", theta, ping_dist, MIN_SAFE_DISTANCE);
 
@@ -68,7 +55,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan)
 	if ((ping_dist<MIN_SAFE_DISTANCE) ) {
 	ROS_WARN("DANGER, WILL ROBINSON!!");
 	laser_alarm_=true;
-	break;
+	//break;
 	}
 	else {
 	laser_alarm_=false;
@@ -94,7 +81,7 @@ int main(int argc, char **argv) {
    	lidar_alarm_publisher_ = pub; // let's make this global, so callback can use it
     ros::Publisher pub2 = nh.advertise<std_msgs::Float32>("lidar_dist", 1);  
     lidar_dist_publisher_ = pub2;
-    ros::Subscriber lidar_subscriber = nh.subscribe("robot0/laser_0", 1, laserCallback);
+    ros::Subscriber lidar_subscriber = nh.subscribe("scan", 1, laserCallback);
     ros::spin(); //this is essentially a "while(1)" statement, except it
     // forces refreshing wakeups upon new data arrival
     // main program essentially hangs here, but it must stay alive to keep the callback function alive
