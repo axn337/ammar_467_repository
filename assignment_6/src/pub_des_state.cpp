@@ -76,7 +76,7 @@ void DesStatePublisher::initializePublishers() {
 bool DesStatePublisher::estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
   
     ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
-    ros::Subscriber alarm_subscriber = n.subscribe("my_lidar_alarm",1,alarmCallback); 
+    ros::Subscriber alarm_subscriber = n.subscribe("ps6_lidar_alarm",1,alarmCallback); 
     ros::Rate loop_timer(1 / dt); //timer for fixed publication rate
 
     
