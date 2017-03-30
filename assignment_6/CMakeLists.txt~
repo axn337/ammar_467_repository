@@ -18,7 +18,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 cs_add_library(traj_builder src/traj_builder.cpp)   
 
 # Executables
-cs_add_executable(my_lidar_alarm src/my_lidar_alarm.cpp)
+cs_add_executable(ps6_lidar_alarm src/ps6_lidar_alarm.cpp)
 cs_add_executable(traj_builder_example_main src/traj_builder_example_main.cpp)
 cs_add_executable(mobot_pub_des_state src/pub_des_state_main.cpp src/pub_des_state.cpp)
 cs_add_executable(mobot_pub_des_state_startup src/pub_des_state_startup_main.cpp src/pub_des_state.cpp)
