@@ -19,11 +19,11 @@ cs_add_library(ps6_traj_builder src/ps6_traj_builder.cpp)
 
 # Executables
 cs_add_executable(ps6_lidar_alarm src/ps6_lidar_alarm.cpp)
-#cs_add_executable(ps6_pub_des_state src/ps6_pub_des_state.cpp)
+cs_add_executable(ps6_pub_des_state src/ps6_pub_des_state.cpp)
 
 #cs_add_executable(lidar_alarm2 src/lidar_alarm2.cpp)
 # target_link_library(example my_lib)
-#target_link_libraries(ps6_pub_des_state ps6_traj_builder)
+target_link_libraries(ps6_pub_des_state ps6_traj_builder)
 
 cs_install()
 cs_export()

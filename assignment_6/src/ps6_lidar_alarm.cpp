@@ -10,7 +10,7 @@
 
 double theta= -0.3;// a set of 30 anlgles, bounded between -1.5 and 1.5 radians
 
-double MIN_SAFE_DISTANCE= 1.0; // to be determened according to theta
+double MIN_SAFE_DISTANCE= 2.0; // to be determened according to theta
 
 int ping_index; // NOT real; callback will have to find this
 
