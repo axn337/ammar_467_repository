@@ -33,7 +33,7 @@
 
 
 //constructor: fill in default param values (changeable via "set" fncs)
-TrajBuilder::TrajBuilder()  {
+PS6TrajBuilder::PS6TrajBuilder()  {
     dt_ = default_dt; //0.02; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
     //dynamic parameters: should be tuned for target system
     accel_max_ = default_accel_max; //0.5; //1m/sec^2
@@ -52,14 +52,14 @@ TrajBuilder::TrajBuilder()  {
 }
 
 //fnc to choose shortest angular distance for motion dang, considering periodicity
-double TrajBuilder::min_dang(double dang) {
+double PS6TrajBuilder::min_dang(double dang) {
     while (dang > M_PI) dang -= 2.0 * M_PI;
     while (dang < -M_PI) dang += 2.0 * M_PI;
     return dang;
 }
 
 // saturation function; limits values to range -1 to 1
-double TrajBuilder::sat(double x) {
+double PS6TrajBuilder::sat(double x) {
     if (x > 1.0) {
         return 1.0;
     }
@@ -70,7 +70,7 @@ double TrajBuilder::sat(double x) {
 }
 
 //signum function: returns the sign of a value
-double TrajBuilder::sgn(double x) {
+double PS6TrajBuilder::sgn(double x) {
     if (x > 0.0) {
         return 1.0;
     }
@@ -82,7 +82,7 @@ double TrajBuilder::sgn(double x) {
 
 //for planar motion, converts a quaternion to a scalar heading,
 // where heading is measured CCW from x-axis
-double TrajBuilder::convertPlanarQuat2Psi(geometry_msgs::Quaternion quaternion) {
+double PS6TrajBuilder::convertPlanarQuat2Psi(geometry_msgs::Quaternion quaternion) {
     double quat_z = quaternion.z;
     double quat_w = quaternion.w;
     double psi = 2.0 * atan2(quat_z, quat_w); // cheap conversion from quaternion to heading for planar motion
@@ -90,7 +90,7 @@ double TrajBuilder::convertPlanarQuat2Psi(geometry_msgs::Quaternion quaternion) 
 }
 
 //given a heading for motion on a plane (as above), convert this to a quaternion
-geometry_msgs::Quaternion TrajBuilder::convertPlanarPsi2Quaternion(double psi) {
+geometry_msgs::Quaternion PS6TrajBuilder::convertPlanarPsi2Quaternion(double psi) {
     geometry_msgs::Quaternion quaternion;
     quaternion.x = 0.0;
     quaternion.y = 0.0;
@@ -100,7 +100,7 @@ geometry_msgs::Quaternion TrajBuilder::convertPlanarPsi2Quaternion(double psi) {
 }
 
 //utility to fill a PoseStamped object from planar x,y,psi info
-geometry_msgs::PoseStamped TrajBuilder::xyPsi2PoseStamped(double x, double y, double psi) {
+geometry_msgs::PoseStamped PS6TrajBuilder::xyPsi2PoseStamped(double x, double y, double psi) {
     geometry_msgs::PoseStamped poseStamped; // a pose object to populate
     poseStamped.pose.orientation = convertPlanarPsi2Quaternion(psi); // convert from heading to corresponding quaternion
     poseStamped.pose.position.x = x; // keep the robot on the ground!
@@ -112,7 +112,7 @@ geometry_msgs::PoseStamped TrajBuilder::xyPsi2PoseStamped(double x, double y, do
 //here are the main traj-builder fncs:
 //for spin-in-place motion that would hit maximum angular velocity, construct 
 // trapezoidal angular velocity profile
-void TrajBuilder::build_trapezoidal_spin_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_trapezoidal_spin_traj(geometry_msgs::PoseStamped start_pose,
         geometry_msgs::PoseStamped end_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     double x_start = start_pose.pose.position.x;
@@ -175,7 +175,7 @@ void TrajBuilder::build_trapezoidal_spin_traj(geometry_msgs::PoseStamped start_p
 //upper-level function to construct a spin-in-place trajectory
 // this function decides if triangular or trapezoidal angular-velocity
 // profile is needed
-void TrajBuilder::build_spin_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_spin_traj(geometry_msgs::PoseStamped start_pose,
         geometry_msgs::PoseStamped end_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     //decide if triangular or trapezoidal profile:
@@ -201,7 +201,7 @@ void TrajBuilder::build_spin_traj(geometry_msgs::PoseStamped start_pose,
 
 //fnc to build a pure straight-line motion trajectory
 //determines if a triangular or trapezoidal velocity profile is needed
-void TrajBuilder::build_travel_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_travel_traj(geometry_msgs::PoseStamped start_pose,
         geometry_msgs::PoseStamped end_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     //decide if triangular or trapezoidal profile:
@@ -224,7 +224,7 @@ void TrajBuilder::build_travel_traj(geometry_msgs::PoseStamped start_pose,
 //given that straight-line, trapezoidal velocity profile trajectory is needed,
 // construct the sequence of states (positions and velocities) to achieve the
 // desired motion, subject to speed and acceleration constraints
-void TrajBuilder::build_trapezoidal_travel_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_trapezoidal_travel_traj(geometry_msgs::PoseStamped start_pose,
         geometry_msgs::PoseStamped end_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     double x_start = start_pose.pose.position.x;
@@ -301,7 +301,7 @@ void TrajBuilder::build_trapezoidal_travel_traj(geometry_msgs::PoseStamped start
 
 // constructs straight-line trajectory with triangular velocity profile,
 // respective limits of velocity and accel
-void TrajBuilder::build_triangular_travel_traj(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped end_pose,std::vector<nav_msgs::Odometry> &vec_of_states) {
+void PS6TrajBuilder::build_triangular_travel_traj(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped end_pose,std::vector<nav_msgs::Odometry> &vec_of_states) {
     double x_start = start_pose.pose.position.x;
     double y_start = start_pose.pose.position.y;
     double x_end = end_pose.pose.position.x;
@@ -356,7 +356,7 @@ void TrajBuilder::build_triangular_travel_traj(geometry_msgs::PoseStamped start_
     vec_of_states.push_back(des_state);
 }
 
-void TrajBuilder::build_triangular_spin_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_triangular_spin_traj(geometry_msgs::PoseStamped start_pose,
         geometry_msgs::PoseStamped end_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     nav_msgs::Odometry des_state;
@@ -401,7 +401,7 @@ void TrajBuilder::build_triangular_spin_traj(geometry_msgs::PoseStamped start_po
 
 //this function would be useful for planning a need for sudden braking
 //compute trajectory corresponding to applying max prudent decel to halt
-void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     //FINISH ME!
 	double x_start = start_pose.pose.position.x;
@@ -440,7 +440,7 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
 // point to goal coords, then a straight-line trajectory from start to goal
 //NOTE:  this function will clear out the vec_of_states vector of trajectory states.
 // It does NOT append new planned states.  User beware.
-void TrajBuilder::build_point_and_go_traj(geometry_msgs::PoseStamped start_pose,
+void PS6TrajBuilder::build_point_and_go_traj(geometry_msgs::PoseStamped start_pose,
         geometry_msgs::PoseStamped end_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
     ROS_INFO("building point-and-go trajectory");

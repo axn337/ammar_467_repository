@@ -1,20 +1,9 @@
 #include "ps6_pub_des_state.h"
+ 
 //ExampleRosClass::ExampleRosClass(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
-
-bool g_lidar_alarm=false; // global var for lidar alarm
-
-void alarmCallback(const std_msgs::Bool& alarm_msg) 
-{ 
-  g_lidar_alarm = alarm_msg.data; //make the alarm status global, so main() can use it
-  if (g_lidar_alarm) {
-     ROS_INFO("LIDAR alarm received!"); 
-  }
-} 
-
-
-DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
-    //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisher::executeCB, this, _1),false) {
+PS6DesStatePublisher::PS6DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
+    //as_(nh, "pub_des_state_server", boost::bind(&PS6DesStatePublisher::executeCB, this, _1),false) {
     //as_.start(); //start the server running
     //configure the trajectory builder: 
     //dt_ = dt; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
@@ -32,6 +21,8 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     trajBuilder_.set_path_move_tol_(path_move_tol_);
     initializePublishers();
     initializeServices();
+    initializeSubscribers();
+
     //define a halt state; zero speed and spin, and fill with viable coords
     halt_twist_.linear.x = 0.0;
     halt_twist_.linear.y = 0.0;
@@ -42,6 +33,10 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     motion_mode_ = DONE_W_SUBGOAL; //init in state ready to process new goal
     e_stop_trigger_ = false; //these are intended to enable e-stop via a service
     e_stop_reset_ = false; //and reset estop
+    g_lidar_alarm = false;
+    e_stop_alarm = false; // Might be redundant, modified for lab 6
+    on_alarm = false;
+    e_stop_on = false; // Might be redundant, modified for lab 6
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(0,0,0);
     start_pose_ = current_pose_;
     end_pose_ = current_pose_;
@@ -52,50 +47,93 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     seg_end_state_ = current_des_state_;
 }
 
-void DesStatePublisher::initializeServices() {
+void PS6DesStatePublisher::initializeServices() {
     ROS_INFO("Initializing Services");
     estop_service_ = nh_.advertiseService("estop_service",
-            &DesStatePublisher::estopServiceCallback, this);
+            &PS6DesStatePublisher::estopServiceCallback, this);
     estop_clear_service_ = nh_.advertiseService("clear_estop_service",
-            &DesStatePublisher::clearEstopServiceCallback, this);
+            &PS6DesStatePublisher::clearEstopServiceCallback, this);
     flush_path_queue_ = nh_.advertiseService("flush_path_queue_service",
-            &DesStatePublisher::flushPathQueueCB, this);
+            &PS6DesStatePublisher::flushPathQueueCB, this);
     append_path_ = nh_.advertiseService("append_path_queue_service",
-            &DesStatePublisher::appendPathQueueCB, this);
+            &PS6DesStatePublisher::appendPathQueueCB, this);
     
+}
+
+void PS6DesStatePublisher::initializeSubscribers() {
+    alarm_subscriber_ = nh_.subscribe("/scan", 1, &PS6DesStatePublisher::alarmCB, this); // Modified by Jonathan
+    //dist_subscriber_ = nh_.subscribe("lidar_dist", 1, &PS6DesStatePublisher::alarmCB, this); // Modified by Jonathan
+    ESTOP_ = nh_.subscribe("/ESTOP", 1, &PS6DesStatePublisher::estopCB, this); // Modified by Jonathan
 }
 
 //member helper function to set up publishers;
 
-void DesStatePublisher::initializePublishers() {
+void PS6DesStatePublisher::initializePublishers() {
     ROS_INFO("Initializing Publishers");
     desired_state_publisher_ = nh_.advertise<nav_msgs::Odometry>("/desState", 1, true);
     des_psi_publisher_ = nh_.advertise<std_msgs::Float64>("/desPsi", 1);
 }
 
-bool DesStatePublisher::estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
-  
-    ros::NodeHandle n; // two lines to create a publisher object that can talk to ROS
-    ros::Subscriber alarm_subscriber = n.subscribe("ps6_lidar_alarm",1,alarmCallback); 
-    ros::Rate loop_timer(1 / dt); //timer for fixed publication rate
+// Following code added by Jonathan
 
-    
-	if(g_lidar_alarm){       
-		ROS_WARN("estop!!");
-		e_stop_trigger_ = true;
-		return true;
-	}
-	ros::spinOnce();
-	loop_timer.sleep();
+void PS6DesStatePublisher::alarmCB(const std_msgs::Bool& alarm_msg) 
+{ 
+  g_lidar_alarm = alarm_msg.data; 
+  if (g_lidar_alarm) {
+     ROS_WARN("lidar stop!!"); 
+	if (!on_alarm) {
+		on_alarm = true;
+                e_stop_trigger_ = true;
+                       }
+                     }
+  else {
+	if (on_alarm) {
+		ROS_INFO("lidar stop reset");
+		on_alarm = false;
+		e_stop_reset_ = true;
+                      }
+       }
 }
 
-bool DesStatePublisher::clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
-    ROS_INFO("estop reset");
-    e_stop_reset_ = true;
-    return true;
+// Code modified by Jonathan stopped
+
+// Code modified for lab 6
+
+void PS6DesStatePublisher::estopCB(const std_msgs::Bool& estop_msg) 
+{ 
+  e_stop_alarm = estop_msg.data;
+  if (e_stop_alarm) {
+     ROS_WARN("ESTOP ACTIVATED");
+	if (!e_stop_on) {
+		e_stop_on = true;
+                e_stop_trigger_ = true;
+                       }
+                     }
+  else {
+	if (e_stop_on) {
+		ROS_INFO("estop reset");
+		e_stop_on = false;
+		e_stop_reset_ = true;
+                      }
+       }
+ 
 }
 
-bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+bool PS6DesStatePublisher::estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+ROS_INFO("Estop trigger service callback");
+// on_alarm = true; // Modified for lab 6, might not be needed
+// e_stop_trigger_ = true; // Modified for lab 6
+}
+
+bool PS6DesStatePublisher::clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+ROS_INFO("Estop reset service callback");
+// on_alarm = false; // Modified for lab 6, might not be needed
+// e_stop_reset_ = true; // Modified for lab 6
+}
+
+// Code modified for lab 6 stopped
+
+bool PS6DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_WARN("flushing path queue");
     while (!path_queue_.empty())
     {
@@ -104,7 +142,7 @@ bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_
     return true;
 }
 
-bool DesStatePublisher::appendPathQueueCB(assignment_6::pathRequest& request, assignment_6::pathResponse& response) {
+bool PS6DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& request, mobot_pub_des_state::pathResponse& response) {
 
     int npts = request.path.poses.size();
     ROS_INFO("appending path queue with %d points", npts);
@@ -114,7 +152,7 @@ bool DesStatePublisher::appendPathQueueCB(assignment_6::pathRequest& request, as
     return true;
 }
 
-void DesStatePublisher::set_init_pose(double x, double y, double psi) {
+void PS6DesStatePublisher::set_init_pose(double x, double y, double psi) {
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(x, y, psi);
 }
 
@@ -135,9 +173,10 @@ void DesStatePublisher::set_init_pose(double x, double y, double psi) {
 // path queue can be flushed via service flush_path_queue_,
 // or points can be appended to path queue w/ service append_path_
 
-void DesStatePublisher::pub_next_state() {
+void PS6DesStatePublisher::pub_next_state() {
     // first test if an e-stop has been triggered
-    if (e_stop_trigger_) {
+    if (e_stop_trigger_) { 
+		ROS_WARN("in estop mode before trajbuilder");
         e_stop_trigger_ = false; //reset trigger
         //compute a halt trajectory
         trajBuilder_.build_braking_traj(current_pose_, des_state_vec_);
@@ -185,6 +224,9 @@ void DesStatePublisher::pub_next_state() {
                 current_des_state_ = seg_end_state_;
                 motion_mode_ = E_STOPPED; //change state to remain halted                    
             }
+			else {
+			     motion_mode_ = E_STOPPED; //change state to remain halted
+			     }  
             break;
 
         case PURSUING_SUBGOAL: //if have remaining pts in computed traj, send them

@@ -3,10 +3,11 @@
 
 #include <queue>
 #include <ps6_traj_builder/ps6_traj_builder.h> //has almost all the headers we need
+
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/Trigger.h>
-#include <assignment_6/path.h>
+#include <mobot_pub_des_state/path.h>
 #include <std_msgs/Float64.h>
 
 //constants and parameters:
@@ -23,7 +24,7 @@ const int DONE_W_SUBGOAL = 1;
 const int PURSUING_SUBGOAL = 2;
 const int HALTING = 3;
 
-class DesStatePublisher {
+class PS6DesStatePublisher {
 private:
 
     ros::NodeHandle nh_; // we'll need a node handle; get one upon instantiation
@@ -46,6 +47,10 @@ private:
     int motion_mode_;
     bool e_stop_trigger_; //these are intended to enable e-stop via a service
     bool e_stop_reset_;
+    bool g_lidar_alarm; // Modified by Jonathan
+    bool e_stop_alarm; // Modified for lab 6
+    bool on_alarm; // Modified by Jonathan
+    bool e_stop_on; // Modified for lab 6
     int traj_pt_i_;
     int npts_traj_;
     double dt_;
@@ -61,23 +66,33 @@ private:
     ros::ServiceServer estop_clear_service_;
     ros::ServiceServer flush_path_queue_;
     ros::ServiceServer append_path_;
+
+    ros::Subscriber alarm_subscriber_; // Modified by Jonathan
+    ros::Subscriber dist_subscriber_; // Modified by Jonathan
+    ros::Subscriber ESTOP_; // Modified for lab 6
+
+//    ros::Publisher lidar_alarm_publisher_;
+//    ros::Publisher lidar_dist_publisher_;
     
     ros::Publisher desired_state_publisher_;
     ros::Publisher des_psi_publisher_;
     
     //a trajectory-builder object; 
-    TrajBuilder trajBuilder_; 
+    PS6TrajBuilder trajBuilder_; 
 
     // member methods:
     void initializePublishers();
     void initializeServices();
+    void initializeSubscribers(); // Modified by Jonathan
+    void alarmCB(const std_msgs::Bool& alarm_msg); // Modified by Jonathan
+    void estopCB(const std_msgs::Bool& estop_msg); // Modified for lab 6
     bool estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
-    bool appendPathQueueCB(assignment_6::pathRequest& request,assignment_6::pathResponse& response);
+    bool appendPathQueueCB(mobot_pub_des_state::pathRequest& request,mobot_pub_des_state::pathResponse& response);
 
 public:
-    DesStatePublisher(ros::NodeHandle& nh);//constructor
+    PS6DesStatePublisher(ros::NodeHandle& nh);//constructor
     int get_motion_mode() {return motion_mode_;}
     void set_motion_mode(int mode) {motion_mode_ = mode;}
     bool get_estop_trigger() { return e_stop_trigger_;}
