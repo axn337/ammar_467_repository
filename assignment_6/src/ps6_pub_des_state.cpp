@@ -61,7 +61,7 @@ void PS6DesStatePublisher::initializeServices() {
 }
 
 void PS6DesStatePublisher::initializeSubscribers() {
-    alarm_subscriber_ = nh_.subscribe("/scan", 1, &PS6DesStatePublisher::alarmCB, this); // Modified by Jonathan
+    alarm_subscriber_ = nh_.subscribe("/ps6_lidar_alarm", 1, &PS6DesStatePublisher::alarmCB, this); // Modified by Jonathan
     //dist_subscriber_ = nh_.subscribe("lidar_dist", 1, &PS6DesStatePublisher::alarmCB, this); // Modified by Jonathan
     ESTOP_ = nh_.subscribe("/ESTOP", 1, &PS6DesStatePublisher::estopCB, this); // Modified by Jonathan
 }
@@ -142,7 +142,7 @@ bool PS6DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, s
     return true;
 }
 
-bool PS6DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& request, mobot_pub_des_state::pathResponse& response) {
+bool PS6DesStatePublisher::appendPathQueueCB(assignment_6::pathRequest& request, assignment_6::pathResponse& response) {
 
     int npts = request.path.poses.size();
     ROS_INFO("appending path queue with %d points", npts);
