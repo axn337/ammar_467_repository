@@ -121,14 +121,14 @@ void PS6DesStatePublisher::estopCB(const std_msgs::Bool& estop_msg)
 
 bool PS6DesStatePublisher::estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
 ROS_INFO("Estop trigger service callback");
-// on_alarm = true; // Modified for lab 6, might not be needed
-// e_stop_trigger_ = true; // Modified for lab 6
+	on_alarm = true; // 
+	e_stop_trigger_ = true; // 
 }
 
 bool PS6DesStatePublisher::clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
 ROS_INFO("Estop reset service callback");
-// on_alarm = false; // Modified for lab 6, might not be needed
-// e_stop_reset_ = true; // Modified for lab 6
+   on_alarm = false; 
+  e_stop_reset_ = true; 
 }
 
 // Code modified for lab 6 stopped
