@@ -10,6 +10,12 @@ int main(int argc, char **argv) {
     //put some points in the path queue--hard coded here
     //desStatePublisher.append_path_queue(5.0,0.0,0.0);
     //desStatePublisher.append_path_queue(-5.0,0.0,0.0);
+    //do_inits(n); //pass in a node handle so this function can set up publisher with it
+  
+	// establish a service to receive path commands
+	//ros::ServiceServer service = n.advertiseService("my_path_service", callback);
+	//ROS_INFO("Ready to accept paths.");
+	//ros::spin(); //callbacks do all the work now
     
     // main loop; publish a desired state every iteration
     while (ros::ok()) {
