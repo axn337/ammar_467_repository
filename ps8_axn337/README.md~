@@ -4,20 +4,22 @@ A submession for assignment 6 in EECS476. Refer to the write up.
 
 # Running the program
 
-Launch gazebo:
-roslaunch mobot_urdf mobot_in_pen.launch
+roslaunch gazebo_ros empty_world.launch
+roslaunch exmpl_models add_glennan_2nd_flr.launch
+roslaunch mobot_urdf mobot_w_lidar.launch
+roscd exmpl_models/glennan_2nd_flr, then:
+rosrun map_server map_server glennan_2nd_flr_model_map.yaml
+rosrun amcl amcl
+rosrun mobot_drifty_odom mobot_drifty_odom
 
-Run lidar_alarm code:
-rosrun assignment_6 ps6_lidar_alarm
+rosrun ps8_axn337 ps8_pub_des_state
+rosrun ps8_axn337 ps8_pub_des_state_path_client
 
-Run open_loop_controller:
-rosrun assignment_6 ps6_open_loop_controller 
 
-Run the publisher:
-rosrun assignment_6 ps6_pub_des_states 
+open loop:
+rosrun ps8_axn337 ps8_open_loop_controller
 
-To call e-stop:
-rosservice call estop_service
+lin_steering:
+rosrun lin_steering lin_steering_wrt_amcl
 
-To reset e-stop:
-rosservice call clear_estop_service
+

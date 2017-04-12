@@ -39,12 +39,15 @@ int main(int argc, char **argv) {
 
    //initial
     pose.position.x = -5.0; // say desired x-coord is 5
+    //pose.position.x = 0.0;
     pose.position.y = 0.0;
     pose.position.z = 0.0; // let's hope so!
     quat = convertPlanarPhi2Quaternion(3.14);
+    //quat = convertPlanarPhi2Quaternion(0);
     pose.orientation = quat;
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
+	
 	
 	//first
 	quat = convertPlanarPhi2Quaternion(0);
@@ -52,6 +55,7 @@ int main(int argc, char **argv) {
     pose.orientation = quat;
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
+    
 	
 	//second
 	quat = convertPlanarPhi2Quaternion(-1.57);    
