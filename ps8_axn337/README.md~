@@ -16,7 +16,7 @@ rosrun ps8_axn337 ps8_pub_des_state
 rosrun ps8_axn337 ps8_pub_des_state_path_client
 
 
-open loop:
+open loop:y
 rosrun ps8_axn337 ps8_open_loop_controller
 
 lin_steering:

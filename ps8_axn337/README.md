@@ -16,10 +16,13 @@ rosrun ps8_axn337 ps8_pub_des_state
 rosrun ps8_axn337 ps8_pub_des_state_path_client
 
 
-open loop:y
+open loop:
 rosrun ps8_axn337 ps8_open_loop_controller
 
 lin_steering:
 rosrun lin_steering lin_steering_wrt_amcl
+
+
+rosrun example_rviz_marker triad_display
 
 
