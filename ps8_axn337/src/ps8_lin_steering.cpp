@@ -57,7 +57,8 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
 void SteeringController::initializeSubscribers() {
     ROS_INFO("Initializing Subscribers: odom and desState");
     // SUBSCRIBE TO IMPERFECT ODOM, drifty_odom
-    odom_subscriber_ = nh_.subscribe("/drifty_odom", 1, &SteeringController::odomCallback, this); //subscribe to odom messages
+    //Subscribe to triad_display_pose instead of drifty_odom topic. Edited by Ammar Nahari
+    odom_subscriber_ = nh_.subscribe("/triad_display_pose", 1, &SteeringController::odomCallback, this); //subscribe to odom messages
     // add more subscribers here, as needed
     des_state_subscriber_ = nh_.subscribe("/desState", 1, &SteeringController::desStateCallback, this); // for desired state messages
 }

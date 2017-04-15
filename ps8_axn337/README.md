@@ -1,6 +1,6 @@
 # my_lidar_alarm
 
-A submession for assignment 6 in EECS476. Refer to the write up.
+A submession for assignment 8 in EECS476. Refer to the write up.
 
 # Running the program
 
@@ -24,9 +24,7 @@ Running Publisher ans client:
 rosrun ps8_axn337 ps8_pub_des_state_path_client
 rosrun ps8_axn337 ps8_pub_des_state
 
-
-
-
+view triad_display bublished by OdomTF in RVIZ:
 rosrun example_rviz_marker triad_display
 
 
