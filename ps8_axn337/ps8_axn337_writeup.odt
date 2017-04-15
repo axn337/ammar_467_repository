@@ -1,0 +1,10 @@
+﻿Ammar Nahari AXN337
+
+EECS 476 PS8
+
+Github link:  https://github.com/axn337/ammar_467_repository/tree/master/ps8_axn337
+Youtube links:
+- Open loop control: https://youtu.be/NfiZFBn0Z-c
+- Amcl steering: https://youtu.be/TGvp8-iVO-0
+The objective was to steer the robot in Glennen hallways to the service elevator and back using amcl plus odometry information. As a first step, I modified some codes from learning_ros/part_4 as follows: in pub_des_client, I specify the poses of the motion.  I did some modifications in pub_dis_state as well to include lidar data and other things. Furthermore, I modified lin_steering_wrt_amcl.cpp file and  change the subscription from drifty_dom topic to /triad_display_pose topic to include both AMCL and odometry data. Other modification has been done as well in lidar_alarm code,  traj_builder, and open_loop_controller.
+To test my code, I first ran open_loop_controller. Even though, the robot followed the step by the commanded sequence, the linear and angular drift was big which resulted in a misguided movement overall. However by running the lin_steering code, the robot was able to correct its movement due to the feedback from lidar, amcl, and odometry information. Therefor the robot was able to visit each pose successfully without running into walls. Please check the youtube videos.
