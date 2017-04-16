@@ -6,6 +6,7 @@
 
 
 // this header incorporates all the necessary #include files and defines the class "SteeringController"
+#include <ros/ros.h> //ALWAYS need to include this
 #include "ps8_steering_algorithm.h"
 #include <odom_tf/odom_tf.h>
 #include <xform_utils/xform_utils.h>

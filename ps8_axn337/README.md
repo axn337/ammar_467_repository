@@ -18,7 +18,7 @@ open loop:
 rosrun ps8_axn337 ps8_open_loop_controller
 
 lin_steering:
-rosrun lin_steering lin_steering_wrt_amcl
+rosrun ps8_lin_steering ps8_lin_steering
 
 Running Publisher ans client:
 rosrun ps8_axn337 ps8_pub_des_state_path_client
